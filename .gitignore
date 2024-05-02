@@ -1,2 +1,4 @@
-/raw_data
-/data/hhar/
+__pycache__/
+
+raw_data/
+data/hhar/

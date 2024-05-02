@@ -107,7 +107,7 @@ path_save = 'hhar'
 version = '20_120' # ? what is 20?
 if not os.path.exists(path_save):
   os.makedirs(path_save)
-data, label = preprocess_hhar("/home/wjdu/imudemo/raw_data/HHAR",
+data, label = preprocess_hhar("../raw_data/HHAR",
                               path_save,
                               version,
                               window_time=50,
