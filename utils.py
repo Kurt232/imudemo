@@ -85,16 +85,34 @@ def split_data(data, label, train_rate=0.8, dev_rate=0.1):
   train_index = int(data.shape[0] * train_rate)
   dev_index = int(data.shape[0] * (train_rate + dev_rate))
   train_data = data[:train_index, ...]
-  train_label = label[:train_index, ...]
   dev_data = data[train_index:dev_index, ...]
-  dev_label = label[train_index:dev_index, ...]
   test_data = data[dev_index:, ...]
-  test_label = label[dev_index:, ...]
+  
+  label_index = -1
+  train_label = label[:train_index, ..., label_index]
+  dev_label = label[train_index:dev_index, ..., label_index]
+  test_label = label[dev_index:, ..., label_index]
   return train_data, train_label, dev_data, dev_label, test_data, test_label
+
+
+def unique_label(data, label):
+  index = np.zeros(data.shape[0], dtype=bool)
+  label_new = []
+  for i in range(label.shape[0]):
+    temp_label = np.unique(label[i])
+    if temp_label.size == 1:
+      index[i] = True
+      label_new.append(label[i, 0])
+  return data[index], np.array(label_new)
 
 
 def finetune_data(data, label, train_rate=0.2):
   size = data.shape[0] * train_rate
+  
+  data, label = unique_label(data, label)
+  if len(data) < size:
+    size = len(data)
+  
   index = []
   while len(index) < size:
     idx = np.random.randint(0, data.shape[0], dtype=int)
@@ -258,10 +276,9 @@ class IMUDataset(Dataset):
   def _flatten(self, instance):
     return instance.reshape(-1)
 
-def stat_acc_f1(label, results_estimated):
+def stat_acc_f1(label, label_estimated):
   # label = np.concatenate(label, 0)
   # results_estimated = np.concatenate(results_estimated, 0)
-  label_estimated = np.argmax(results_estimated, 1)
   f1 = f1_score(label, label_estimated, average='macro')
   acc = np.sum(label == label_estimated) / label.size
   return acc, f1

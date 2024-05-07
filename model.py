@@ -48,7 +48,7 @@ class Classifier(nn.Module):
   def forward(self, x):
     h = self.encoder(x)
     h = self.classifier(h)
-    return h
+    return F.softmax(h, dim=1), h
   
   def load_pretrain(self, model_file, map_location=None):
     state_dict = self.state_dict()

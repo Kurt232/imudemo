@@ -10,9 +10,9 @@ from model import Classifier
 
 batch_size = 32
 lr = 0.001
-epochs = 100
+epochs = 1000
 
-model_file = ""
+model_file = "output/hhar_pretrain_autoencoder/model.pt"
 
 def evaluate(model, dataloader, criterion, device):
   model.eval()  # Set the model to evaluation mode
@@ -23,10 +23,12 @@ def evaluate(model, dataloader, criterion, device):
   with torch.no_grad():  # No need to track gradients
     for data, target in dataloader:
       data = data.to(device)
-      outputs, _ = model(data)
-      loss = criterion(outputs, target)
+      target = target.to(device)
+      logits, outputs = model(data)
+      loss = criterion(logits, target)
       total_loss += loss.item()
-      results.append(outputs)
+      _, predicted = torch.max(outputs.data, 1)
+      results.append(predicted)
       labels.append(target)
   
   average_loss = total_loss / len(dataloader)  
@@ -42,6 +44,8 @@ if __name__ == "__main__":
   train_data, train_label, vali_data, vali_label, test_data, test_label = utils.split_data(
       data, label, train_rate=0.8, dev_rate=0.1)
   train_data, train_label = utils.finetune_data(train_data, train_label, train_rate=0.2)
+  vali_data, vali_label = utils.unique_label(vali_data, vali_label)
+  test_data, test_label = utils.unique_label(test_data, test_label)
   
   dataset_train = utils.IMUDataset(train_data, train_label)
   dataset_vali = utils.IMUDataset(vali_data, vali_label)
@@ -71,11 +75,12 @@ if __name__ == "__main__":
       time_sum = 0.0
       for data, target in tqdm(dataloader_train, desc=f"Epoch {epoch + 1}/{epochs}"):
         data = data.to(device)
+        target = target.to(device)
         start_time = time.time()
         
         optimizer.zero_grad()
-        outputs = model(data)
-        loss = criterion(outputs, target)
+        logits, _ = model(data)
+        loss = criterion(logits, target)
         
         loss.backward()
         optimizer.step()
