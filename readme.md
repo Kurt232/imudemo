@@ -32,3 +32,12 @@ hhar_20_120 from LIMU-BERT
     }
 ```
 
+## implement
+I want to implement a GPT-like pre-training model as a decoder by unsupervised learning, based on this [repo](https://github.com/karpathy/minGPT/tree/master). However, I guess that it could do not work well, given that the limited scale of the data.
+
+2024/05/03
+there is a question is the vocab_size is undefined, so I choose the Autoencoder.
+
+I think the performance of the pre-training model depends on the pre-training task, and I guess the autoencoder just to predict the input vector [120, 6], and it seems simpler than the BERT's task.
+
+

@@ -43,7 +43,7 @@ def separate_data_label(data_raw):
   return data, labels
 
 
-# 'Index', 'Arrival_Time', 'Creation_Time', 'x', 'y', 'z', 'User', 'Model', 'Device', 'gt'
+#['Index', 'Arrival_Time', 'Creation_Time', 'x', 'y', 'z', 'User', 'Model', 'Device', 'gt']
 def preprocess_hhar(path,
                     path_save,
                     version,
