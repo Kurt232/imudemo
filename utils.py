@@ -218,6 +218,7 @@ class Dataset4Pretrain(Dataset):
 
   def __getitem__(self, idx):
     instance = self._normalize(self.data[idx])
+    instance = self._flatten(instance)
     instance = torch.from_numpy(instance).float()
     return instance, instance
 
@@ -225,6 +226,9 @@ class Dataset4Pretrain(Dataset):
     instance_ = instance.copy()
     instance_[:, :3] = instance[:, :3] / 9.8  # acc
     return instance_
+  
+  def _flatten(self, instance):
+    return instance.reshape(-1)
 
 
 class IMUDataset(Dataset):
@@ -242,13 +246,17 @@ class IMUDataset(Dataset):
 
   def __getitem__(self, idx):
     instance = self._normalize(self.data[idx])
+    instance = self._flatten(instance)
     return torch.from_numpy(instance).float(), torch.from_numpy(
-        np.array(self.labels[idx])).long()
+        np.array(self.label[idx])).long()
 
   def _normalize(self, instance):
     instance_ = instance.copy()
     instance_[:, :3] = instance[:, :3] / 9.8  # acc
     return instance_
+  
+  def _flatten(self, instance):
+    return instance.reshape(-1)
 
 def stat_acc_f1(label, results_estimated):
   # label = np.concatenate(label, 0)

@@ -1,4 +1,5 @@
 import copy
+import os
 import time
 import torch
 import torch.nn as nn
@@ -10,11 +11,14 @@ import utils
 from model import Autoencoder
 
 batch_size = 32
-lr = 0.001
-epochs = 100
+lr = 0.0005
+epochs = 1000
 
 model_name = "autoencoder"
-save_path = "/data/hhar_pretrain_" + model_name + "/"
+save_path = os.path.join("output", "hhar_pretrain_" + model_name)
+if not os.path.exists(save_path):
+  os.mkdir(save_path)
+
 
 
 def evaluate_autoencoder(model, dataloader, criterion, device):
@@ -23,12 +27,46 @@ def evaluate_autoencoder(model, dataloader, criterion, device):
   with torch.no_grad():  # No need to track gradients
     for data, target in dataloader:
       data = data.to(device)
+      target = target.to(device)
       outputs, _ = model(data)
       loss = criterion(outputs, target)
       total_loss += loss.item()
   average_loss = total_loss / len(dataloader)
   return average_loss
 
+
+# Training loop for the autoencoder
+def train_autoencoder(model, dataloader_train, dataloader_test, optimizer, criterion, device, epochs):
+  model.to(device)
+  best_loss = 1e3
+  
+  for epoch in range(epochs):
+    loss_sum = 0. 
+    time_sum = 0.
+    model.train()
+    for data, target in tqdm(dataloader_train, desc=f"Epoch {epoch + 1}/{epochs}"):
+      data = data.to(device)
+      target = target.to(device)
+      start_time = time.time()
+      optimizer.zero_grad()
+      outputs, _ = model(data)
+      loss = criterion(outputs, target)
+
+      loss.backward()
+      optimizer.step()
+      time_sum += time.time() - start_time
+      loss_sum += loss.item()
+      
+    loss_eva = evaluate_autoencoder(model, dataloader_test, criterion, device)
+    print('Epoch %d/%d : Average Loss %5.4f. Test Loss %5.4f'
+                  % (epoch + 1, epochs, loss_sum / len(dataloader_train), loss_eva))
+    print("Train execution time: %.5f seconds" % (time_sum / len(dataloader_train)))
+    if loss_eva < best_loss:
+        best_loss = loss_eva
+        torch.save(model.state_dict(), os.path.join(save_path, f'model.pt'))
+        
+  print('The Total Epoch have been reached.')
+  print('Loss: %0.3f' % best_loss)
 
 if __name__ == '__main__':
   # Load the dataset
@@ -48,37 +86,5 @@ if __name__ == '__main__':
   criterion = nn.MSELoss()
   optimizer = optim.Adam(autoencoder.parameters(), lr=lr)
   device = utils.get_device("0")
-
-  # Training loop for the autoencoder
-  def train_autoencoder(model, dataloader_train, dataloader_test, optimizer, criterion, device, epochs):
-    model.to(device)
-    best_loss = 1e3
-    
-    for epoch in range(epochs):
-      loss_sum = 0. 
-      time_sum = 0.
-      model.train()
-      for data, target in tqdm(dataloader_train, desc=f"Epoch {epoch + 1}/{epochs}"):
-        data = data.to(device)
-        start_time = time.time()
-        optimizer.zero_grad()
-        outputs, _ = model(data)
-        loss = criterion(outputs, target)
-
-        loss.backward()
-        optimizer.step()
-        time_sum += time.time() - start_time
-        loss_sum += loss.item()
-        
-      loss_eva = evaluate_autoencoder(model, dataloader_test, criterion)
-      print('Epoch %d/%d : Average Loss %5.4f. Test Loss %5.4f'
-                    % (epoch + 1, epochs, loss_sum / len(dataloader_train), loss_eva))
-      print("Train execution time: %.5f seconds" % (time_sum / len(dataloader_train)))
-      if loss_eva < best_loss:
-          best_loss = loss_eva
-          torch.save(model.state_dict(), save_path +  f'model.pt')
-          
-    print('The Total Epoch have been reached.')
-    print('Loss: %0.3f' % best_loss)
 
   train_autoencoder(autoencoder, dataloader_train, dataloader_test, optimizer, criterion, device, epochs)
