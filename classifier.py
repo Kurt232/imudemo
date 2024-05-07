@@ -43,7 +43,7 @@ if __name__ == "__main__":
   utils.set_seeds(2405022300)  # must be the same as the one in train.py
   train_data, train_label, vali_data, vali_label, test_data, test_label = utils.split_data(
       data, label, train_rate=0.8, dev_rate=0.1)
-  train_data, train_label = utils.finetune_data(train_data, train_label, train_rate=0.2)
+  train_data, train_label = utils.unique_label(train_data, train_label)
   vali_data, vali_label = utils.unique_label(vali_data, vali_label)
   test_data, test_label = utils.unique_label(test_data, test_label)
   
@@ -65,7 +65,6 @@ if __name__ == "__main__":
   # Training loop for the classifier
   def train_classifier(model, dataloader_train, dataloader_vali, dataloader_test, optimizer, criterion, device, model_file, epochs=10):
     model.to(device)
-    model.load_pretrain(model_file, device)
     
     vali_acc_best = 0.0
     best_stat = None
@@ -100,7 +99,6 @@ if __name__ == "__main__":
       if vali_acc > vali_acc_best:
         vali_acc_best = vali_acc
         best_stat = (train_loss, vali_loss, test_loss, train_acc, vali_acc, test_acc, train_f1, vali_f1, test_f1)
-        torch.save(model.state_dict(), model_file)
     
     print('The Total Epoch have been reached.')
     print('Loss:  %0.3f/%0.3f/%0.3f\nBest Accuracy: %0.3f/%0.3f/%0.3f\nF1: %0.3f/%0.3f/%0.3f' % best_stat)

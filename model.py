@@ -37,8 +37,6 @@ class Classifier(nn.Module):
       nn.Linear(120 * 6, 128),
       nn.ReLU(), 
       nn.Linear(128, 64))
-    for p in self.encoder.parameters():
-      p.requires_grad = False
     self.classifier = nn.Sequential(
         nn.Linear(64, 32),  
         nn.ReLU(),
@@ -50,10 +48,3 @@ class Classifier(nn.Module):
     h = self.classifier(h)
     return F.softmax(h, dim=1), h
   
-  def load_pretrain(self, model_file, map_location=None):
-    state_dict = self.state_dict()
-    model_dicts = torch.load(model_file, map_location=map_location).items()
-    for k, v in model_dicts:
-        if k in state_dict:
-            state_dict.update({k: v})
-    self.load_state_dict(state_dict)
