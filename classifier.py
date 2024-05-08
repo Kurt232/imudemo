@@ -10,7 +10,8 @@ from model import Classifier
 
 batch_size = 32
 lr = 0.001
-epochs = 1000
+epochs = 500
+train_rate = 0.05
 
 model_file = "output/hhar_pretrain_autoencoder/model.pt"
 
@@ -43,7 +44,7 @@ if __name__ == "__main__":
   utils.set_seeds(2405022300)  # must be the same as the one in train.py
   train_data, train_label, vali_data, vali_label, test_data, test_label = utils.split_data(
       data, label, train_rate=0.8, dev_rate=0.1)
-  train_data, train_label = utils.unique_label(train_data, train_label)
+  train_data, train_label = utils.finetune_data(train_data, train_label, train_rate=train_rate)
   vali_data, vali_label = utils.unique_label(vali_data, vali_label)
   test_data, test_label = utils.unique_label(test_data, test_label)
   
